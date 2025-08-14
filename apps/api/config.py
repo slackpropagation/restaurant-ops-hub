@@ -1,19 +1,21 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 import os
 from dotenv import load_dotenv
 
-# load .env if present
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=False)
+# Load local .env if present
+ENV_PATH = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH, override=False)
 
 @dataclass(frozen=True)
 class Settings:
     adapters: List[str]
     next_public_api: str
-    google_location_id: str | None
-    imap_url: str | None
-    imap_user: str | None
-    imap_pass: str | None
+    google_location_id: Optional[str]
+    imap_url: Optional[str]
+    imap_user: Optional[str]
+    imap_pass: Optional[str]
 
 def get_settings() -> Settings:
     adapters = [a.strip() for a in os.getenv("ADAPTERS", "mock").split(",") if a.strip()]

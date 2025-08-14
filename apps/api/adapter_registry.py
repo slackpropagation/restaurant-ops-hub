@@ -1,26 +1,22 @@
-from typing import Optional
+from typing import List
 from core.ports import InventoryPort, ReviewsPort
-
-# Adapters (mocks now; real ones later)
 from adapters.inventory_mock import InventoryMockAdapter
 from adapters.reviews_mock import ReviewsMockAdapter
-
-# Example placeholders for later:
+# Placeholders for future real adapters:
 # from adapters.inventory_csv import InventoryCSVAdapter
 # from adapters.reviews_google import ReviewsGoogleAdapter
 # from adapters.reviews_email import ReviewsEmailAdapter
 
 class AdapterRegistry:
-    def __init__(self, flags: list[str]):
-        self.flags = set(flags)
+    def __init__(self, flags: List[str]):
+        self.flags = set(f.strip().lower() for f in flags)
 
     def inventory(self) -> InventoryPort:
-        # later: if "toast" in self.flags: return InventoryToastAdapter(...)
-        # elif "csv" in self.flags: return InventoryCSVAdapter(path="data/inbox/inventory.csv")
+        # if "csv" in self.flags: return InventoryCSVAdapter(path="data/inbox/inventory.csv")
+        # if "toast" in self.flags: return InventoryToastAdapter(...)
         return InventoryMockAdapter()
 
     def reviews(self) -> ReviewsPort:
-        # later:
         # if "google" in self.flags: return ReviewsGoogleAdapter(location_id=...)
-        # if "email" in self.flags: return ReviewsEmailAdapter(imap_url=..., creds=...)
+        # if "email" in self.flags: return ReviewsEmailAdapter(...)
         return ReviewsMockAdapter()
