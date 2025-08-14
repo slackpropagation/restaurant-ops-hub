@@ -1,11 +1,19 @@
 from fastapi import FastAPI, Query
-from packages.core.services import InventoryService, ReviewService
-from packages.adapters.inventory_mock import InventoryMockAdapter
-from packages.adapters.reviews_mock import ReviewsMockAdapter
+from apps.api.config import get_settings
+from apps.api.adapter_registry import AdapterRegistry
+from core.services import InventoryService, ReviewService
 
-app = FastAPI(title="Ops Hub API")
-inv_svc = InventoryService(InventoryMockAdapter())
-rev_svc = ReviewService(ReviewsMockAdapter())
+settings = get_settings()
+registry = AdapterRegistry(settings.adapters)
+
+app = FastAPI(title="Ops Hub API", version="0.1.0")
+
+inv_svc = InventoryService(registry.inventory())
+rev_svc = ReviewService(registry.reviews())
+
+@app.get("/health")
+def health():
+    return {"ok": True, "adapters": settings.adapters}
 
 @app.get("/inventory")
 def get_inventory():
@@ -17,8 +25,4 @@ def get_reviews(days: int = Query(7, ge=1, le=30)):
 
 @app.get("/themes")
 def get_themes(days: int = Query(7, ge=1, le=30)):
-    return [{"name": k, "count": v} for k,v in rev_svc.themes(days)]
-
-@app.get("/health")
-def health():
-    return {"ok": True}
+    return [{"name": k, "count": v} for k, v in rev_svc.themes(days)]
