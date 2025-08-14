@@ -14,3 +14,6 @@ package-dir = {"" = "packages"}
 [tool.setuptools.packages.find]
 where = ["packages"]
 include = ["*"]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
