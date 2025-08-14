@@ -1,0 +1,1 @@
+# Empty file; marks apps/api as a Python package for clean imports if ever needed.
