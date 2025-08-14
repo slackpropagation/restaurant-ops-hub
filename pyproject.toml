@@ -5,8 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ops-hub"
 version = "0.1.0"
+description = "Restaurant Ops Hub"
 requires-python = ">=3.11"
-dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "pandas", "sqlalchemy"]
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic>=2.0",
+  "python-dotenv",
+  "pandas",
+  "sqlalchemy",
+]
 
 [tool.setuptools]
 package-dir = {"" = "packages"}

@@ -10,5 +10,8 @@
     "type": "git",
     "url": "https://github.com/slackpropagation/restaurant-ops-hub.git"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
 }
