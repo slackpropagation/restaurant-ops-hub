@@ -1,53 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star, Filter, Download } from 'lucide-react'
-
-interface Review {
-  review_id: string
-  source: string
-  rating: number
-  text: string
-  created_at: string
-  theme?: string
-}
+import { apiClient, Review } from '../lib/api'
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      review_id: '1',
-      source: 'Google',
-      rating: 5,
-      text: 'Excellent food and service! The staff was very friendly and the food came out quickly.',
-      created_at: '2024-01-15T10:00:00Z',
-      theme: 'positive'
-    },
-    {
-      review_id: '2',
-      source: 'Google',
-      rating: 3,
-      text: 'Food was okay but service was slow. Had to wait 45 minutes for our order.',
-      created_at: '2024-01-15T08:00:00Z',
-      theme: 'service'
-    },
-    {
-      review_id: '3',
-      source: 'Yelp',
-      rating: 4,
-      text: 'Great atmosphere and good food. Will definitely come back!',
-      created_at: '2024-01-14T15:30:00Z',
-      theme: 'positive'
-    },
-    {
-      review_id: '4',
-      source: 'Google',
-      rating: 2,
-      text: 'Food was cold when it arrived. Not worth the price.',
-      created_at: '2024-01-14T12:00:00Z',
-      theme: 'food_quality'
-    }
-  ])
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [ratingFilter, setRatingFilter] = useState<'all' | '5' | '4' | '3' | '2' | '1'>('all')
   const [sourceFilter, setSourceFilter] = useState<'all' | 'Google' | 'Yelp'>('all')
+
+  useEffect(() => {
+    fetchReviews()
+  }, [])
+
+  const fetchReviews = async () => {
+    try {
+      setLoading(true)
+      const data = await apiClient.getReviews(30) // Get last 30 days
+      setReviews(data)
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredReviews = reviews.filter(review => {
     const matchesRating = ratingFilter === 'all' || review.rating.toString() === ratingFilter
