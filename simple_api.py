@@ -146,11 +146,13 @@ def get_today_brief(db: Session = Depends(get_db)):
         ],
         "recent_reviews": [
             {
-                "id": review.id,
+                "review_id": review.review_id,
                 "source": review.source,
                 "rating": review.rating,
                 "text": review.text or "No text",
-                "created_at": review.created_at.isoformat() if review.created_at else None
+                "created_at": review.created_at.isoformat() if review.created_at else None,
+                "theme": review.theme,
+                "url": review.url
             }
             for review in recent_reviews
         ],
