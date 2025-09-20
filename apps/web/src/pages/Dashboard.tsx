@@ -7,7 +7,8 @@ import {
   FileText,
   AlertTriangle,
   TrendingUp,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react'
 import { apiClient, InventoryItem, Review, Change } from '../lib/api'
 
@@ -29,8 +30,7 @@ export default function Dashboard() {
   const [recentReviews, setRecentReviews] = useState<Review[]>([])
   const [recentChanges, setRecentChanges] = useState<Change[]>([])
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
       try {
         setLoading(true)
         
@@ -42,10 +42,13 @@ export default function Dashboard() {
         ])
         
         // Calculate stats
+        console.log('Dashboard data:', { inventory, reviews, changes })
         const eightySixCount = inventory.filter(item => item.status === '86').length
         const lowStockCount = inventory.filter(item => item.status === 'low').length
         const recentReviewsCount = reviews.length
         const activeChangesCount = changes.filter(change => change.is_active).length
+        
+        console.log('Dashboard stats:', { eightySixCount, lowStockCount, recentReviewsCount, activeChangesCount })
         
         setStats({
           eightySixCount,
@@ -71,7 +74,8 @@ export default function Dashboard() {
         setLoading(false)
       }
     }
-    
+
+  useEffect(() => {
     fetchDashboardData()
   }, [])
 
@@ -117,11 +121,21 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome to Restaurant Ops Hub. Here's what's happening today.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Welcome to Restaurant Ops Hub. Here's what's happening today.
+          </p>
+        </div>
+        <button
+          onClick={fetchDashboardData}
+          disabled={loading}
+          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -206,48 +220,42 @@ export default function Dashboard() {
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Reviews</h3>
           <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <Star className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900">"Great food and service!"</p>
-                <p className="text-xs text-gray-500">Google • 2 hours ago</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <Star className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900">"Food was cold when it arrived"</p>
-                <p className="text-xs text-gray-500">Google • 4 hours ago</p>
-              </div>
-            </div>
+            {recentReviews.length > 0 ? (
+              recentReviews.map((review) => (
+                <div key={review.review_id} className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <Star className="h-5 w-5 text-yellow-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900">"{review.text.substring(0, 50)}..."</p>
+                    <p className="text-xs text-gray-500">{review.source} • {new Date(review.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No recent reviews</p>
+            )}
           </div>
         </div>
 
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Changes</h3>
           <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <Clock className="h-5 w-5 text-primary-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900">New menu item added</p>
-                <p className="text-xs text-gray-500">Manager • 1 hour ago</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <Clock className="h-5 w-5 text-primary-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900">Kitchen hours updated</p>
-                <p className="text-xs text-gray-500">Manager • 3 hours ago</p>
-              </div>
-            </div>
+            {recentChanges.length > 0 ? (
+              recentChanges.map((change) => (
+                <div key={change.change_id} className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <Clock className="h-5 w-5 text-primary-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900">{change.title}</p>
+                    <p className="text-xs text-gray-500">{change.created_by} • {new Date(change.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No recent changes</p>
+            )}
           </div>
         </div>
       </div>
