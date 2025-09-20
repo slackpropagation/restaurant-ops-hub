@@ -14,7 +14,8 @@ from apps.api.config import get_settings
 from apps.api.adapter_registry import AdapterRegistry
 from apps.api.schemas import (
     InventoryResponse, ReviewResponse, ChangeResponse, BriefResponse,
-    InventoryOut, ReviewOut, ThemeOut
+    InventoryOut, ReviewOut, ThemeOut, InventoryCreate, MenuCreate, 
+    ChangeCreate, MenuResponse
 )
 from packages.core.services import InventoryService, ReviewService
 from packages.core.database import get_db, Inventory, Review, Change, Menu, User, StockStatus

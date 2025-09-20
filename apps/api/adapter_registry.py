@@ -1,7 +1,7 @@
 from typing import List
-from core.ports import InventoryPort, ReviewsPort
-from adapters.inventory_mock import InventoryMockAdapter
-from adapters.reviews_mock import ReviewsMockAdapter
+from packages.core.ports import InventoryPort, ReviewsPort
+from packages.adapters.inventory_mock import InventoryMockAdapter
+from packages.adapters.reviews_mock import ReviewsMockAdapter
 # Placeholders for future real adapters:
 # from adapters.inventory_csv import InventoryCSVAdapter
 # from adapters.reviews_google import ReviewsGoogleAdapter

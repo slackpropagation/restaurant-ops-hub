@@ -85,16 +85,16 @@ export default function Brief() {
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <span className="w-3 h-3 bg-danger-500 rounded-full mr-2"></span>
-          86 Items ({briefData?.eightySixItems.length || 0})
+          86 Items ({briefData?.eighty_six_items.length || 0})
         </h2>
-        {briefData?.eightySixItems.length === 0 ? (
+        {briefData?.eighty_six_items.length === 0 ? (
           <p className="text-gray-500">No items are currently 86'd</p>
         ) : (
           <div className="space-y-2">
-            {briefData?.eightySixItems.map((item) => (
+            {briefData?.eighty_six_items.map((item) => (
               <div key={item.id} className="flex justify-between items-center p-3 bg-danger-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <p className="font-medium text-gray-900">{item.menu_item?.name || 'Unknown Item'}</p>
                   <p className="text-sm text-gray-500">{item.item_id}</p>
                 </div>
                 <p className="text-sm text-danger-600">{item.notes}</p>
@@ -108,16 +108,16 @@ export default function Brief() {
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <span className="w-3 h-3 bg-warning-500 rounded-full mr-2"></span>
-          Low Stock Items ({briefData?.lowStockItems.length || 0})
+          Low Stock Items ({briefData?.low_stock_items.length || 0})
         </h2>
-        {briefData?.lowStockItems.length === 0 ? (
+        {briefData?.low_stock_items.length === 0 ? (
           <p className="text-gray-500">All items are well stocked</p>
         ) : (
           <div className="space-y-2">
-            {briefData?.lowStockItems.map((item) => (
+            {briefData?.low_stock_items.map((item) => (
               <div key={item.id} className="flex justify-between items-center p-3 bg-warning-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <p className="font-medium text-gray-900">{item.menu_item?.name || 'Unknown Item'}</p>
                   <p className="text-sm text-gray-500">{item.item_id}</p>
                 </div>
                 <p className="text-sm text-warning-600">{item.notes}</p>
@@ -131,7 +131,7 @@ export default function Brief() {
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Reviews</h2>
         <div className="space-y-3">
-          {briefData?.recentReviews.map((review) => (
+          {briefData?.recent_reviews.map((review) => (
             <div key={review.review_id} className="border-l-4 border-primary-200 pl-4">
               <div className="flex items-center space-x-2 mb-1">
                 <div className="flex">
