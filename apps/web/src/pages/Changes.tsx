@@ -1,42 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, CheckCircle } from 'lucide-react'
-
-interface Change {
-  change_id: string
-  title: string
-  detail: string
-  created_at: string
-  created_by: string
-  is_active: boolean
-}
+import { apiClient, Change } from '../lib/api'
 
 export default function Changes() {
-  const [changes, setChanges] = useState<Change[]>([
-    {
-      change_id: '1',
-      title: 'New Menu Item Added',
-      detail: 'Added vegan burger to the menu. Available starting today.',
-      created_at: '2024-01-15T09:00:00Z',
-      created_by: 'Manager',
-      is_active: true
-    },
-    {
-      change_id: '2',
-      title: 'Kitchen Hours Updated',
-      detail: 'Kitchen now closes at 10 PM on weekdays and 11 PM on weekends.',
-      created_at: '2024-01-15T07:00:00Z',
-      created_by: 'Manager',
-      is_active: true
-    },
-    {
-      change_id: '3',
-      title: 'Staff Meeting Schedule',
-      detail: 'Weekly staff meeting moved to Tuesday at 2 PM.',
-      created_at: '2024-01-14T16:00:00Z',
-      created_by: 'Manager',
-      is_active: false
-    }
-  ])
+  const [changes, setChanges] = useState<Change[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
