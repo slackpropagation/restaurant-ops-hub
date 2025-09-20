@@ -5,26 +5,41 @@ import { apiClient, Change } from '../lib/api'
 export default function Changes() {
   const [changes, setChanges] = useState<Change[]>([])
   const [loading, setLoading] = useState(true)
-
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     detail: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newChange: Change = {
-      change_id: Date.now().toString(),
-      title: formData.title,
-      detail: formData.detail,
-      created_at: new Date().toISOString(),
-      created_by: 'Manager',
-      is_active: true
+  useEffect(() => {
+    fetchChanges()
+  }, [])
+
+  const fetchChanges = async () => {
+    try {
+      setLoading(true)
+      const data = await apiClient.getChanges()
+      setChanges(data)
+    } catch (error) {
+      console.error('Failed to fetch changes:', error)
+    } finally {
+      setLoading(false)
     }
-    setChanges([newChange, ...changes])
-    setFormData({ title: '', detail: '' })
-    setShowForm(false)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await apiClient.createChange({
+        title: formData.title,
+        detail: formData.detail
+      })
+      setFormData({ title: '', detail: '' })
+      setShowForm(false)
+      await fetchChanges()
+    } catch (error) {
+      console.error('Failed to create change:', error)
+    }
   }
 
   const handleToggleActive = (changeId: string) => {
@@ -35,8 +50,15 @@ export default function Changes() {
     ))
   }
 
-  const handleDelete = (changeId: string) => {
-    setChanges(changes.filter(change => change.change_id !== changeId))
+  const handleDelete = async (changeId: string) => {
+    if (window.confirm('Are you sure you want to delete this change?')) {
+      try {
+        await apiClient.deleteChange(changeId)
+        await fetchChanges()
+      } catch (error) {
+        console.error('Failed to delete change:', error)
+      }
+    }
   }
 
   const activeChanges = changes.filter(change => change.is_active)
