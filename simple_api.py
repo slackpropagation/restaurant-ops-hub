@@ -312,8 +312,8 @@ def get_admin_stats(db: Session = Depends(get_db)):
 def inject_test_data(db: Session = Depends(get_db)):
     """Inject comprehensive test data into the database"""
     try:
-        # Read and execute the working seed script
-        with open('infra/db/working_seed.sql', 'r') as f:
+        # Read and execute the expanded seed script
+        with open('infra/db/expanded_seed.sql', 'r') as f:
             seed_sql = f.read()
         
         # Execute the SQL
