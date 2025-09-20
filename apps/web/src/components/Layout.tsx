@@ -6,6 +6,7 @@ import {
   Package, 
   Star, 
   Megaphone,
+  Settings,
   Menu,
   X
 } from 'lucide-react'
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Inventory', href: '/inventory', icon: Package },
   { name: 'Reviews', href: '/reviews', icon: Star },
   { name: 'Changes', href: '/changes', icon: Megaphone },
+  { name: 'Admin', href: '/admin', icon: Settings },
 ]
 
 export default function Layout({ children }: LayoutProps) {

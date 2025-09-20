@@ -5,6 +5,8 @@ Simple API without PDF dependencies for testing
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from sqlalchemy import text
+import json
 from sqlalchemy.orm import Session
 from datetime import datetime, date, timedelta
 import sys
@@ -13,7 +15,7 @@ import os
 # Add the project root to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
-from packages.core.database import get_db, Inventory, Review, Change, Menu, StockStatus
+from packages.core.database import get_db, Inventory, Review, Change, Menu, StockStatus, Acknowledgement, Shift
 
 app = FastAPI(
     title="Restaurant Ops Hub API", 
@@ -283,6 +285,130 @@ def get_today_brief_pdf(db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
+@app.post("/api/v1/admin/inject-data")
+def inject_test_data(db: Session = Depends(get_db)):
+    """Inject comprehensive test data into the database"""
+    try:
+        # Read and execute the final seed script
+        with open('infra/db/final_seed.sql', 'r') as f:
+            seed_sql = f.read()
+        
+        # Execute the SQL
+        db.execute(text(seed_sql))
+        db.commit()
+        
+        # Get counts
+        menu_count = db.query(Menu).count()
+        inventory_count = db.query(Inventory).count()
+        reviews_count = db.query(Review).count()
+        changes_count = db.query(Change).count()
+        
+        return {
+            "message": "Test data injected successfully",
+            "menu_count": menu_count,
+            "inventory_count": inventory_count,
+            "reviews_count": reviews_count,
+            "changes_count": changes_count
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to inject data: {str(e)}")
+
+@app.post("/api/v1/admin/clear-data")
+def clear_all_data(db: Session = Depends(get_db)):
+    """Clear all data from the database"""
+    try:
+        # Clear data in reverse order of dependencies
+        db.query(Acknowledgement).delete()
+        db.query(Shift).delete()
+        db.query(Change).delete()
+        db.query(Review).delete()
+        db.query(Inventory).delete()
+        db.query(Menu).delete()
+        
+        db.commit()
+        
+        return {
+            "message": "All data cleared successfully",
+            "total_deleted": "all records"
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to clear data: {str(e)}")
+
+@app.get("/api/v1/admin/export-data")
+def export_data(db: Session = Depends(get_db)):
+    """Export all data as JSON"""
+    try:
+        # Get all data
+        menus = db.query(Menu).all()
+        inventory = db.query(Inventory).all()
+        reviews = db.query(Review).all()
+        changes = db.query(Change).all()
+        
+        # Convert to dictionaries
+        export_data = {
+            "menus": [
+                {
+                    "item_id": menu.item_id,
+                    "name": menu.name,
+                    "price": menu.price,
+                    "allergy_flags": menu.allergy_flags,
+                    "active": menu.active,
+                    "created_at": menu.created_at.isoformat() if menu.created_at else None,
+                    "updated_at": menu.updated_at.isoformat() if menu.updated_at else None
+                }
+                for menu in menus
+            ],
+            "inventory": [
+                {
+                    "id": item.id,
+                    "item_id": item.item_id,
+                    "status": item.status.value if hasattr(item.status, 'value') else str(item.status),
+                    "notes": item.notes,
+                    "expected_back": item.expected_back.isoformat() if item.expected_back else None,
+                    "updated_at": item.updated_at.isoformat() if item.updated_at else None
+                }
+                for item in inventory
+            ],
+            "reviews": [
+                {
+                    "review_id": review.review_id,
+                    "source": review.source,
+                    "rating": review.rating,
+                    "text": review.text,
+                    "created_at": review.created_at.isoformat() if review.created_at else None,
+                    "theme": review.theme,
+                    "url": review.url
+                }
+                for review in reviews
+            ],
+            "changes": [
+                {
+                    "change_id": change.change_id,
+                    "title": change.title,
+                    "detail": change.detail,
+                    "effective_from": change.effective_from.isoformat() if change.effective_from else None,
+                    "created_by": change.created_by,
+                    "is_active": change.is_active,
+                    "created_at": change.created_at.isoformat() if change.created_at else None
+                }
+                for change in changes
+            ],
+            "exported_at": datetime.utcnow().isoformat(),
+            "total_records": len(menus) + len(inventory) + len(reviews) + len(changes)
+        }
+        
+        return Response(
+            content=json.dumps(export_data, indent=2),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=restaurant-data-{date.today().isoformat()}.json"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to export data: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

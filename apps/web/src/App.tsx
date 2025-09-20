@@ -5,6 +5,7 @@ import Brief from './pages/Brief'
 import Inventory from './pages/Inventory'
 import Reviews from './pages/Reviews'
 import Changes from './pages/Changes'
+import Admin from './pages/Admin'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/changes" element={<Changes />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </Layout>
   )
