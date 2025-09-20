@@ -58,8 +58,8 @@ export default function Dashboard() {
         })
         
         // Set recent data for display
-        setRecentReviews(reviews.slice(0, 2))
-        setRecentChanges(changes.filter(change => change.is_active).slice(0, 2))
+        setRecentReviews(reviews.slice(0, 5))
+        setRecentChanges(changes.filter(change => change.is_active).slice(0, 5))
         
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
@@ -218,7 +218,7 @@ export default function Dashboard() {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Reviews</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Reviews (Last 5)</h3>
           <div className="space-y-3">
             {recentReviews.length > 0 ? (
               recentReviews.map((review) => (
@@ -239,7 +239,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Changes</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Changes (Last 5)</h3>
           <div className="space-y-3">
             {recentChanges.length > 0 ? (
               recentChanges.map((change) => (
