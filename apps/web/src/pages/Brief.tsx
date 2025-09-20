@@ -1,75 +1,38 @@
 import { useState, useEffect } from 'react'
 import { Download, RefreshCw } from 'lucide-react'
-
-interface BriefData {
-  date: string
-  eightySixItems: Array<{
-    id: number
-    item_id: string
-    name: string
-    status: string
-    notes?: string
-  }>
-  lowStockItems: Array<{
-    id: number
-    item_id: string
-    name: string
-    status: string
-    notes?: string
-  }>
-  recentReviews: Array<{
-    review_id: string
-    source: string
-    rating: number
-    text: string
-    created_at: string
-  }>
-  changes: Array<{
-    change_id: string
-    title: string
-    detail: string
-    created_at: string
-  }>
-  generated_at: string
-}
+import { apiClient, BriefData } from '../lib/api'
 
 export default function Brief() {
   const [briefData, setBriefData] = useState<BriefData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      setBriefData({
-        date: new Date().toISOString().split('T')[0],
-        eightySixItems: [
-          { id: 1, item_id: 'CHK-001', name: 'Grilled Chicken', status: '86', notes: 'Out of stock until tomorrow' },
-          { id: 2, item_id: 'FISH-002', name: 'Salmon Fillet', status: '86', notes: 'Supplier issue' }
-        ],
-        lowStockItems: [
-          { id: 3, item_id: 'BEEF-001', name: 'Ribeye Steak', status: 'low', notes: 'Only 2 portions left' },
-          { id: 4, item_id: 'VEG-001', name: 'Asparagus', status: 'low', notes: 'Running low' }
-        ],
-        recentReviews: [
-          { review_id: '1', source: 'Google', rating: 5, text: 'Excellent food and service!', created_at: '2024-01-15T10:00:00Z' },
-          { review_id: '2', source: 'Google', rating: 3, text: 'Food was okay but service was slow', created_at: '2024-01-15T08:00:00Z' }
-        ],
-        changes: [
-          { change_id: '1', title: 'New Menu Item', detail: 'Added vegan burger to the menu', created_at: '2024-01-15T09:00:00Z' },
-          { change_id: '2', title: 'Kitchen Hours', detail: 'Kitchen closes at 10 PM on weekdays', created_at: '2024-01-15T07:00:00Z' }
-        ],
-        generated_at: new Date().toISOString()
-      })
-      setLoading(false)
-    }, 1000)
+    fetchBriefData()
   }, [])
 
-  const handleGenerateBrief = () => {
-    setLoading(true)
-    // TODO: Call API to generate new brief
-    setTimeout(() => {
+  const fetchBriefData = async () => {
+    try {
+      setLoading(true)
+      const data = await apiClient.getBrief()
+      setBriefData(data)
+    } catch (error) {
+      console.error('Failed to fetch brief data:', error)
+      // Fallback to mock data on error
+      setBriefData({
+        date: new Date().toISOString().split('T')[0],
+        eighty_six_items: [],
+        low_stock_items: [],
+        recent_reviews: [],
+        changes: [],
+        generated_at: new Date().toISOString()
+      })
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  const handleGenerateBrief = async () => {
+    await fetchBriefData()
   }
 
   const handleDownloadPDF = () => {
