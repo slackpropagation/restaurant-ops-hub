@@ -36,10 +36,10 @@ export default function Brief() {
   }
 
   const handleDownloadPDF = () => {
-    // Download PDF from API
+    // Download brief from API (HTML format for now)
     const link = document.createElement('a')
     link.href = '/api/v1/brief/today/pdf'
-    link.download = `pre-shift-brief-${new Date().toISOString().split('T')[0]}.pdf`
+    link.download = `pre-shift-brief-${new Date().toISOString().split('T')[0]}.html`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -76,7 +76,7 @@ export default function Brief() {
             className="btn btn-primary flex items-center"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download PDF
+            Download Brief
           </button>
         </div>
       </div>
