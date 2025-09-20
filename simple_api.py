@@ -64,11 +64,13 @@ def get_reviews(days: int = 7, db: Session = Depends(get_db)):
     reviews = db.query(Review).filter(Review.created_at >= cutoff_date).all()
     return [
         {
-            "id": review.id,
+            "review_id": review.review_id,
             "source": review.source,
             "rating": review.rating,
             "text": review.text,
-            "created_at": review.created_at.isoformat() if review.created_at else None
+            "created_at": review.created_at.isoformat() if review.created_at else None,
+            "theme": review.theme,
+            "url": review.url
         }
         for review in reviews
     ]
@@ -310,8 +312,8 @@ def get_admin_stats(db: Session = Depends(get_db)):
 def inject_test_data(db: Session = Depends(get_db)):
     """Inject comprehensive test data into the database"""
     try:
-        # Read and execute the final seed script
-        with open('infra/db/final_seed.sql', 'r') as f:
+        # Read and execute the working seed script
+        with open('infra/db/working_seed.sql', 'r') as f:
             seed_sql = f.read()
         
         # Execute the SQL
