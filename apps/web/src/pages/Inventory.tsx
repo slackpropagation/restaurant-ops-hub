@@ -38,11 +38,69 @@ export default function Inventory() {
   }
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const itemName = item.menu_item?.name || 'Unknown Item'
+    const matchesSearch = itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.item_id.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (editingItem) {
+        // Update existing item
+        await apiClient.updateInventoryItem(editingItem.id, formData)
+      } else {
+        // Create new item
+        await apiClient.createInventoryItem(formData)
+      }
+      
+      // Reset form and refresh data
+      setFormData({ item_id: '', status: 'ok', notes: '', expected_back: '' })
+      setShowAddForm(false)
+      setEditingItem(null)
+      await fetchData()
+    } catch (error) {
+      console.error('Failed to save inventory item:', error)
+    }
+  }
+
+  const handleEdit = (item: InventoryItem) => {
+    setEditingItem(item)
+    setFormData({
+      item_id: item.item_id,
+      status: item.status,
+      notes: item.notes || '',
+      expected_back: item.expected_back || ''
+    })
+    setShowAddForm(true)
+  }
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this inventory item?')) {
+      try {
+        await apiClient.deleteInventoryItem(id)
+        await fetchData()
+      } catch (error) {
+        console.error('Failed to delete inventory item:', error)
+      }
+    }
+  }
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      await apiClient.uploadInventoryCSV(file)
+      await fetchData()
+      alert('CSV uploaded successfully!')
+    } catch (error) {
+      console.error('Failed to upload CSV:', error)
+      alert('Failed to upload CSV. Please check the format.')
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
