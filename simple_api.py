@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from sqlalchemy import text
 import json
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, date, timedelta
 import sys
 import os
@@ -44,7 +44,7 @@ def health():
 @app.get("/api/v1/inventory")
 def get_inventory(db: Session = Depends(get_db)):
     """Get current inventory status from database"""
-    inventory_items = db.query(Inventory).all()
+    inventory_items = db.query(Inventory).options(joinedload(Inventory.menu_item)).all()
     return [
         {
             "id": item.id,
@@ -52,9 +52,33 @@ def get_inventory(db: Session = Depends(get_db)):
             "status": item.status.value if hasattr(item.status, 'value') else str(item.status),
             "notes": item.notes,
             "expected_back": item.expected_back.isoformat() if item.expected_back else None,
-            "updated_at": item.updated_at.isoformat() if item.updated_at else None
+            "updated_at": item.updated_at.isoformat() if item.updated_at else None,
+            "menu_item": {
+                "item_id": item.menu_item.item_id if item.menu_item else None,
+                "name": item.menu_item.name if item.menu_item else None,
+                "price": item.menu_item.price if item.menu_item else None,
+                "allergy_flags": item.menu_item.allergy_flags if item.menu_item else None,
+                "active": item.menu_item.active if item.menu_item else None
+            } if item.menu_item else None
         }
         for item in inventory_items
+    ]
+
+@app.get("/api/v1/menu")
+def get_menu_items(db: Session = Depends(get_db)):
+    """Get all menu items from database"""
+    menu_items = db.query(Menu).all()
+    return [
+        {
+            "item_id": item.item_id,
+            "name": item.name,
+            "price": item.price,
+            "allergy_flags": item.allergy_flags,
+            "active": item.active,
+            "created_at": item.created_at.isoformat() if item.created_at else None,
+            "updated_at": item.updated_at.isoformat() if item.updated_at else None
+        }
+        for item in menu_items
     ]
 
 @app.get("/api/v1/reviews")
