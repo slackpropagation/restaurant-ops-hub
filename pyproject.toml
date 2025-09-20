@@ -13,7 +13,18 @@ dependencies = [
   "pydantic>=2.0",
   "python-dotenv",
   "pandas",
-  "sqlalchemy",
+  "sqlalchemy[postgresql]",
+  "alembic",
+  "psycopg2-binary",
+  "asyncpg",
+  "httpx",
+  "jinja2",
+  "weasyprint",
+  "python-multipart",
+  "python-jose[cryptography]",
+  "passlib[bcrypt]",
+  "redis",
+  "celery",
 ]
 
 [tool.setuptools]
