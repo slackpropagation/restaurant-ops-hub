@@ -227,8 +227,13 @@ export default function Dashboard() {
                     <Star className="h-5 w-5 text-yellow-400" />
                   </div>
                   <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-sm font-medium text-gray-900">{review.source}</span>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="text-xs text-gray-500">{new Date(review.created_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-yellow-600">{review.rating}★</span>
+                    </div>
                     <p className="text-sm text-gray-900">"{review.text.substring(0, 50)}..."</p>
-                    <p className="text-xs text-gray-500">{review.source} • {new Date(review.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))

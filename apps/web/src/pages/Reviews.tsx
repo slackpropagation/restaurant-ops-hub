@@ -7,7 +7,7 @@ export default function Reviews() {
   const [loading, setLoading] = useState(true)
 
   const [ratingFilter, setRatingFilter] = useState<'all' | '5' | '4' | '3' | '2' | '1'>('all')
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'Google' | 'Yelp'>('all')
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'Google' | 'Yelp' | 'TripAdvisor' | 'Facebook' | 'OpenTable'>('all')
 
   useEffect(() => {
     fetchReviews()
@@ -30,6 +30,18 @@ export default function Reviews() {
     const matchesSource = sourceFilter === 'all' || review.source === sourceFilter
     return matchesRating && matchesSource
   })
+
+  // Group reviews by platform
+  const groupedReviews = filteredReviews.reduce((acc, review) => {
+    if (!acc[review.source]) {
+      acc[review.source] = []
+    }
+    acc[review.source].push(review)
+    return acc
+  }, {} as Record<string, Review[]>)
+
+  // Get all unique platforms
+  const platforms = Array.from(new Set(reviews.map(r => r.source))).sort()
 
   const getRatingStars = (rating: number) => {
     return [...Array(5)].map((_, i) => (
@@ -170,28 +182,74 @@ export default function Reviews() {
             >
               Yelp
             </button>
+            <button
+              onClick={() => setSourceFilter('TripAdvisor')}
+              className={`btn ${sourceFilter === 'TripAdvisor' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              TripAdvisor
+            </button>
+            <button
+              onClick={() => setSourceFilter('Facebook')}
+              className={`btn ${sourceFilter === 'Facebook' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              Facebook
+            </button>
+            <button
+              onClick={() => setSourceFilter('OpenTable')}
+              className={`btn ${sourceFilter === 'OpenTable' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              OpenTable
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Reviews List */}
-      <div className="space-y-4">
-        {filteredReviews.map((review) => (
-          <div key={review.review_id} className="card">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="flex">
-                    {getRatingStars(review.rating)}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{review.source}</span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(review.created_at).toLocaleDateString()}
-                  </span>
-                  {getThemeBadge(review.theme)}
-                </div>
-                <p className="text-gray-900">{review.text}</p>
+      {/* Reviews List - Categorized by Platform */}
+      <div className="space-y-8">
+        {Object.entries(groupedReviews).map(([platform, platformReviews]) => (
+          <div key={platform} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <span className="w-3 h-3 rounded-full bg-primary-500 mr-3"></span>
+                {platform} Reviews
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({platformReviews.length} review{platformReviews.length !== 1 ? 's' : ''})
+                </span>
+              </h3>
+              <div className="text-sm text-gray-500">
+                Avg: {(platformReviews.reduce((sum, r) => sum + r.rating, 0) / platformReviews.length).toFixed(1)}★
               </div>
+            </div>
+            
+            <div className="space-y-3">
+              {platformReviews.map((review) => (
+                <div key={review.review_id} className="card">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="flex">
+                          {getRatingStars(review.rating)}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                        {getThemeBadge(review.theme)}
+                      </div>
+                      <p className="text-gray-900">{review.text}</p>
+                      {review.url && (
+                        <a 
+                          href={review.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary-600 hover:text-primary-800 mt-2 inline-block"
+                        >
+                          View on {platform} →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
