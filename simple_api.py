@@ -288,6 +288,24 @@ def get_today_brief_pdf(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
+@app.get("/api/v1/admin/stats")
+def get_admin_stats(db: Session = Depends(get_db)):
+    """Get current database statistics"""
+    try:
+        menu_count = db.query(Menu).count()
+        inventory_count = db.query(Inventory).count()
+        reviews_count = db.query(Review).count()
+        changes_count = db.query(Change).count()
+        
+        return {
+            "menu_count": menu_count,
+            "inventory_count": inventory_count,
+            "reviews_count": reviews_count,
+            "changes_count": changes_count
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
 @app.post("/api/v1/admin/inject-data")
 def inject_test_data(db: Session = Depends(get_db)):
     """Inject comprehensive test data into the database"""

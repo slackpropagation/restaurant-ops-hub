@@ -1,9 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Database, Trash2, Download, Upload } from 'lucide-react'
+
+interface AdminStats {
+  menu_count: number
+  inventory_count: number
+  reviews_count: number
+  changes_count: number
+}
 
 export default function Admin() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [stats, setStats] = useState<AdminStats>({
+    menu_count: 0,
+    inventory_count: 0,
+    reviews_count: 0,
+    changes_count: 0
+  })
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/v1/admin/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
 
   const handleInjectData = async () => {
     setIsLoading(true)
@@ -20,6 +49,7 @@ export default function Admin() {
       if (response.ok) {
         const result = await response.json()
         setMessage(`✅ Data injected successfully! Added ${result.menu_count} menu items, ${result.inventory_count} inventory items, ${result.reviews_count} reviews, and ${result.changes_count} changes.`)
+        await fetchStats() // Refresh stats after injection
       } else {
         const error = await response.json()
         setMessage(`❌ Error: ${error.detail}`)
@@ -50,6 +80,7 @@ export default function Admin() {
       if (response.ok) {
         const result = await response.json()
         setMessage(`✅ Data cleared successfully! Removed all ${result.total_deleted} records.`)
+        await fetchStats() // Refresh stats after clearing
       } else {
         const error = await response.json()
         setMessage(`❌ Error: ${error.detail}`)
@@ -172,19 +203,19 @@ export default function Admin() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Data Statistics</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">37</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.menu_count}</div>
             <div className="text-sm text-gray-600">Menu Items</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">37</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.inventory_count}</div>
             <div className="text-sm text-gray-600">Inventory Items</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">25</div>
+            <div className="text-2xl font-bold text-purple-600">{stats.reviews_count}</div>
             <div className="text-sm text-gray-600">Reviews</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">12</div>
+            <div className="text-2xl font-bold text-green-600">{stats.changes_count}</div>
             <div className="text-sm text-gray-600">Changes</div>
           </div>
         </div>
