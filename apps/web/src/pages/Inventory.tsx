@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Upload, Search, Edit, Trash2 } from 'lucide-react'
+import { Plus, Upload, Search, Edit, Trash2, X } from 'lucide-react'
 import { apiClient, InventoryItem, MenuItem } from '../lib/api'
 
 export default function Inventory() {
@@ -127,11 +127,20 @@ export default function Inventory() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <button className="btn btn-secondary flex items-center">
+          <label className="btn btn-secondary flex items-center cursor-pointer">
             <Upload className="h-4 w-4 mr-2" />
             Upload CSV
-          </button>
-          <button className="btn btn-primary flex items-center">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCSVUpload}
+              className="hidden"
+            />
+          </label>
+          <button 
+            onClick={() => setShowAddForm(true)}
+            className="btn btn-primary flex items-center"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Item
           </button>
@@ -182,6 +191,111 @@ export default function Inventory() {
         </div>
       </div>
 
+      {/* Add/Edit Form */}
+      {showAddForm && (
+        <div className="card">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+            </h3>
+            <button
+              onClick={() => {
+                setShowAddForm(false)
+                setEditingItem(null)
+                setFormData({ item_id: '', status: 'ok', notes: '', expected_back: '' })
+              }}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Menu Item
+                </label>
+                <select
+                  value={formData.item_id}
+                  onChange={(e) => setFormData({ ...formData, item_id: e.target.value })}
+                  className="input"
+                  required
+                >
+                  <option value="">Select a menu item</option>
+                  {menuItems.map((menuItem) => (
+                    <option key={menuItem.item_id} value={menuItem.item_id}>
+                      {menuItem.name} ({menuItem.item_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'ok' | 'low' | '86' })}
+                  className="input"
+                  required
+                >
+                  <option value="ok">OK</option>
+                  <option value="low">Low Stock</option>
+                  <option value="86">86'd</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <input
+                  type="text"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="input"
+                  placeholder="Optional notes..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Expected Back
+                </label>
+                <input
+                  type="date"
+                  value={formData.expected_back}
+                  onChange={(e) => setFormData({ ...formData, expected_back: e.target.value })}
+                  className="input"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm(false)
+                  setEditingItem(null)
+                  setFormData({ item_id: '', status: 'ok', notes: '', expected_back: '' })
+                }}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                {editingItem ? 'Update Item' : 'Add Item'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Inventory Table */}
       <div className="card">
         <div className="overflow-x-auto">
@@ -206,35 +320,58 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                      <div className="text-sm text-gray-500">{item.item_id}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={getStatusBadge(item.status)}>
-                      {item.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.notes || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(item.updated_at).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-primary-600 hover:text-primary-900 mr-3">
-                      Edit
-                    </button>
-                    <button className="text-danger-600 hover:text-danger-900">
-                      Delete
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    Loading inventory items...
                   </td>
                 </tr>
-              ))}
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    {items.length === 0 
+                      ? 'No inventory items found. Click "Add Item" to get started.'
+                      : 'No items match your current filters.'
+                    }
+                  </td>
+                </tr>
+              ) : (
+                filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{item.menu_item?.name || 'Unknown Item'}</div>
+                        <div className="text-sm text-gray-500">{item.item_id}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={getStatusBadge(item.status)}>
+                        {item.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.notes || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(item.updated_at).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button 
+                        onClick={() => handleEdit(item)}
+                        className="text-primary-600 hover:text-primary-900 mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        className="text-danger-600 hover:text-danger-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
