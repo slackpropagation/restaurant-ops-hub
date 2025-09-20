@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { 
   Home, 
@@ -26,6 +26,11 @@ const navigation = [
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+
+  // Close sidebar when route changes
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen bg-gray-50">
