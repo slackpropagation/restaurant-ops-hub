@@ -204,52 +204,49 @@ export default function Reviews() {
         </div>
       </div>
 
-      {/* Reviews List - Categorized by Platform */}
-      <div className="space-y-8">
+      {/* Reviews List - Categorized by Platform - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {Object.entries(groupedReviews).map(([platform, platformReviews]) => (
           <div key={platform} className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <span className="w-3 h-3 rounded-full bg-primary-500 mr-3"></span>
-                {platform} Reviews
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({platformReviews.length} review{platformReviews.length !== 1 ? 's' : ''})
-                </span>
-              </h3>
-              <div className="text-sm text-gray-500">
-                Avg: {(platformReviews.reduce((sum, r) => sum + r.rating, 0) / platformReviews.length).toFixed(1)}★
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              {platformReviews.map((review) => (
-                <div key={review.review_id} className="card">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="flex">
-                          {getRatingStars(review.rating)}
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          {new Date(review.created_at).toLocaleDateString()}
-                        </span>
-                        {getThemeBadge(review.theme)}
-                      </div>
-                      <p className="text-gray-900">{review.text}</p>
-                      {review.url && (
-                        <a 
-                          href={review.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary-600 hover:text-primary-800 mt-2 inline-block"
-                        >
-                          View on {platform} →
-                        </a>
-                      )}
-                    </div>
-                  </div>
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-primary-500 mr-3"></span>
+                  {platform}
+                </h3>
+                <div className="text-sm text-gray-500">
+                  {(platformReviews.reduce((sum, r) => sum + r.rating, 0) / platformReviews.length).toFixed(1)}★
                 </div>
-              ))}
+              </div>
+              <div className="text-sm text-gray-500 mb-4">
+                {platformReviews.length} review{platformReviews.length !== 1 ? 's' : ''}
+              </div>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {platformReviews.map((review) => (
+                  <div key={review.review_id} className="border-l-2 border-gray-200 pl-3 py-2">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="flex">
+                        {getRatingStars(review.rating)}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-900 mb-2">{review.text}</p>
+                    {review.url && (
+                      <a 
+                        href={review.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary-600 hover:text-primary-800"
+                      >
+                        View on {platform} →
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ))}
