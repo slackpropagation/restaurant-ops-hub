@@ -1,23 +1,41 @@
-import { useState } from 'react'
-import { Plus, Upload, Search } from 'lucide-react'
-
-interface InventoryItem {
-  id: number
-  item_id: string
-  name: string
-  status: 'ok' | 'low' | '86'
-  notes?: string
-  updated_at: string
-}
+import { useState, useEffect } from 'react'
+import { Plus, Upload, Search, Edit, Trash2 } from 'lucide-react'
+import { apiClient, InventoryItem, MenuItem } from '../lib/api'
 
 export default function Inventory() {
-  const [items, setItems] = useState<InventoryItem[]>([
-    { id: 1, item_id: 'CHK-001', name: 'Grilled Chicken', status: '86', notes: 'Out of stock', updated_at: '2024-01-15T10:00:00Z' },
-    { id: 2, item_id: 'BEEF-001', name: 'Ribeye Steak', status: 'low', notes: 'Only 2 left', updated_at: '2024-01-15T09:00:00Z' },
-    { id: 3, item_id: 'FISH-002', name: 'Salmon Fillet', status: 'ok', updated_at: '2024-01-15T08:00:00Z' },
-  ])
+  const [items, setItems] = useState<InventoryItem[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'ok' | 'low' | '86'>('all')
+  const [loading, setLoading] = useState(true)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+  const [formData, setFormData] = useState({
+    item_id: '',
+    status: 'ok' as 'ok' | 'low' | '86',
+    notes: '',
+    expected_back: ''
+  })
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [inventoryData, menuData] = await Promise.all([
+        apiClient.getInventory(),
+        apiClient.getMenuItems()
+      ])
+      setItems(inventoryData)
+      setMenuItems(menuData)
+    } catch (error) {
+      console.error('Failed to fetch inventory data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
