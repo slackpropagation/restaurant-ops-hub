@@ -73,8 +73,13 @@ export default function Brief() {
   }
 
   const handleDownloadPDF = () => {
-    // TODO: Implement PDF download
-    console.log('Downloading PDF...')
+    // Download PDF from API
+    const link = document.createElement('a')
+    link.href = '/api/v1/brief/today/pdf'
+    link.download = `pre-shift-brief-${new Date().toISOString().split('T')[0]}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   if (loading) {
