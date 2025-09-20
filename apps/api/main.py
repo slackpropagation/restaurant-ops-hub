@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, date, timedelta
@@ -17,6 +18,7 @@ from apps.api.schemas import (
 )
 from packages.core.services import InventoryService, ReviewService
 from packages.core.database import get_db, Inventory, Review, Change, Menu, User, StockStatus
+from packages.core.pdf_service import PDFService
 
 settings = get_settings()
 registry = AdapterRegistry(settings.adapters)
@@ -108,3 +110,72 @@ def get_today_brief(db: Session = Depends(get_db)):
         changes=changes,
         generated_at=datetime.utcnow()
     )
+
+@app.get("/api/v1/brief/today/pdf")
+def get_today_brief_pdf(db: Session = Depends(get_db)):
+    """Generate and download today's pre-shift brief as PDF"""
+    try:
+        # Get brief data (same as the JSON endpoint)
+        today = date.today()
+        
+        eighty_six_items = db.query(Inventory).filter(Inventory.status == StockStatus.EIGHTY_SIX).all()
+        low_stock_items = db.query(Inventory).filter(Inventory.status == StockStatus.LOW).all()
+        cutoff_date = datetime.utcnow() - timedelta(days=7)
+        recent_reviews = db.query(Review).filter(Review.created_at >= cutoff_date).all()
+        changes = db.query(Change).filter(Change.is_active == True).all()
+        
+        # Convert to dictionaries for PDF generation
+        brief_data = {
+            'date': today.isoformat(),
+            'eighty_six_items': [
+                {
+                    'name': item.menu_item.name if item.menu_item else 'Unknown Item',
+                    'item_id': item.item_id,
+                    'notes': item.notes or 'No notes'
+                }
+                for item in eighty_six_items
+            ],
+            'low_stock_items': [
+                {
+                    'name': item.menu_item.name if item.menu_item else 'Unknown Item',
+                    'item_id': item.item_id,
+                    'notes': item.notes or 'No notes'
+                }
+                for item in low_stock_items
+            ],
+            'recent_reviews': [
+                {
+                    'source': review.source,
+                    'rating': review.rating,
+                    'text': review.text or 'No text',
+                    'created_at': review.created_at.isoformat()
+                }
+                for review in recent_reviews
+            ],
+            'changes': [
+                {
+                    'title': change.title,
+                    'detail': change.detail or 'No details',
+                    'created_by': change.created_by,
+                    'created_at': change.created_at.isoformat()
+                }
+                for change in changes
+            ],
+            'generated_at': datetime.utcnow().isoformat()
+        }
+        
+        # Generate PDF
+        pdf_service = PDFService()
+        pdf_bytes = pdf_service.generate_brief_pdf(brief_data)
+        
+        # Return PDF response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=pre-shift-brief-{today.isoformat()}.pdf"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
