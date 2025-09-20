@@ -163,7 +163,9 @@ def get_today_brief(db: Session = Depends(get_db)):
                 "change_id": change.change_id,
                 "title": change.title,
                 "detail": change.detail or "No details",
+                "effective_from": change.effective_from.isoformat() if change.effective_from else None,
                 "created_by": change.created_by,
+                "is_active": change.is_active,
                 "created_at": change.created_at.isoformat() if change.created_at else None
             }
             for change in changes
