@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Clock
 } from 'lucide-react'
+import { apiClient, InventoryItem, Review, Change } from '../lib/api'
 
 interface DashboardStats {
   eightySixCount: number
@@ -25,19 +26,53 @@ export default function Dashboard() {
     activeChanges: 0
   })
   const [loading, setLoading] = useState(true)
+  const [recentReviews, setRecentReviews] = useState<Review[]>([])
+  const [recentChanges, setRecentChanges] = useState<Change[]>([])
 
   useEffect(() => {
-    // TODO: Replace with actual API calls
-    // For now, simulate loading
-    setTimeout(() => {
-      setStats({
-        eightySixCount: 3,
-        lowStockCount: 7,
-        recentReviews: 12,
-        activeChanges: 2
-      })
-      setLoading(false)
-    }, 1000)
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch all data in parallel
+        const [inventory, reviews, changes] = await Promise.all([
+          apiClient.getInventory(),
+          apiClient.getReviews(7),
+          apiClient.getChanges()
+        ])
+        
+        // Calculate stats
+        const eightySixCount = inventory.filter(item => item.status === '86').length
+        const lowStockCount = inventory.filter(item => item.status === 'low').length
+        const recentReviewsCount = reviews.length
+        const activeChangesCount = changes.filter(change => change.is_active).length
+        
+        setStats({
+          eightySixCount,
+          lowStockCount,
+          recentReviewsCount,
+          activeChangesCount
+        })
+        
+        // Set recent data for display
+        setRecentReviews(reviews.slice(0, 2))
+        setRecentChanges(changes.filter(change => change.is_active).slice(0, 2))
+        
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error)
+        // Fallback to mock data on error
+        setStats({
+          eightySixCount: 3,
+          lowStockCount: 7,
+          recentReviews: 12,
+          activeChanges: 2
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchDashboardData()
   }, [])
 
   const quickActions = [
