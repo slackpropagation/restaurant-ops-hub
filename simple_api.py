@@ -2,11 +2,14 @@
 """
 Simple API without PDF dependencies for testing
 """
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import text
 import json
+import jwt
+import bcrypt
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, date, timedelta
 import sys
@@ -16,6 +19,14 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 from packages.core.database import get_db, Inventory, Review, Change, Menu, StockStatus, Acknowledgement, Shift
+
+# JWT Configuration
+SECRET_KEY = "your-secret-key-change-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Security
+security = HTTPBearer()
 
 app = FastAPI(
     title="Restaurant Ops Hub API", 
