@@ -2,7 +2,7 @@
 """
 Simple API without PDF dependencies for testing
 """
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from sqlalchemy import text
@@ -115,6 +115,49 @@ def get_changes(db: Session = Depends(get_db)):
         }
         for change in changes
     ]
+
+@app.post("/api/v1/changes")
+def create_change(
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """Create a new change/announcement"""
+    try:
+        # Extract data from request
+        title = request.get("title", "")
+        detail = request.get("detail", "")
+        created_by = request.get("created_by", "user-001")  # Use existing user ID
+        
+        # Generate a unique change_id
+        change_id = f"CHG-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        
+        # Create new change
+        new_change = Change(
+            change_id=change_id,
+            title=title,
+            detail=detail,
+            effective_from=date.today(),
+            created_by=created_by,
+            is_active=True,
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(new_change)
+        db.commit()
+        db.refresh(new_change)
+        
+        return {
+            "change_id": new_change.change_id,
+            "title": new_change.title,
+            "detail": new_change.detail,
+            "effective_from": new_change.effective_from.isoformat() if new_change.effective_from else None,
+            "created_by": new_change.created_by,
+            "is_active": new_change.is_active,
+            "created_at": new_change.created_at.isoformat() if new_change.created_at else None
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create change: {str(e)}")
 
 @app.get("/api/v1/brief/today")
 def get_today_brief(db: Session = Depends(get_db)):
