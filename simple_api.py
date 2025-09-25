@@ -101,8 +101,8 @@ def get_reviews(days: int = 7, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/changes")
 def get_changes(db: Session = Depends(get_db)):
-    """Get active changes/announcements"""
-    changes = db.query(Change).filter(Change.is_active == True).all()
+    """Get active changes/announcements ordered chronologically (most recent first)"""
+    changes = db.query(Change).filter(Change.is_active == True).order_by(Change.created_at.desc()).all()
     return [
         {
             "change_id": change.change_id,
